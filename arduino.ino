@@ -1,12 +1,14 @@
-// Variables will change:
 int heatState = LOW;             // heatState used to set the LED
+int pf_ready_State = LOW;        // heatState used to set the LE
 
-// Generally, you should use "unsigned long" for variables that hold time
-// The value will quickly become too large for an int to store
-unsigned long previousMillis = 0;        // will store last time LED was updated
+unsigned long previousMillis = 0;     // will store last time LED was updated
+unsigned long pf_ready_previousMillis = 0;       
 
-// constants won't change:
 const long interval = 2000;           // interval at which to blink (milliseconds)
+const long pf_ready_interval = 500;   // interval at which to blink (milliseconds)
+
+bool PF_READY = false;
+bool STARTED = false;
 
 void setup() {
   // set the digital pin as output:
@@ -55,7 +57,6 @@ bool CUTTER_COMPLETE(){ // is cutter closed?
     return false;
   }
 }
-bool STARTED = false;
 
 bool PF_START(){ // Signal from PF machines
   int cutState = digitalRead(D7);
@@ -65,7 +66,6 @@ bool PF_START(){ // Signal from PF machines
     return false;
   }
 }
-
 
 void cut(){
   do{
@@ -78,15 +78,15 @@ void cut(){
   digitalWrite(D1, LOW); // when its done shut the motor down
   }
 
-int FEED_TICK = 3;
-int feedState; // current state
-int lastFeedState; // previous state
-int ticks = 0; // counter
+int FEED_TICK = 9; // How long is the feed going to be?
 void feed(){
+  int feedState; // current state
+  int lastFeedState; // previous state
+  int ticks = 0; // counter
   digitalWrite(D2, HIGH);
   do{
     feedState = digitalRead(3);
-    delay(20); // this dleay is a bit longer for stability 
+    delay(1); // this dleay is for stability 
     if(feedState != lastFeedState){
       if(feedState==LOW){ticks++;}
       }
@@ -96,7 +96,22 @@ void feed(){
   digitalWrite(D2, LOW);  
 }
 
-bool PF_READY = false;
+void pf_ready(){
+  unsigned long pf_ready_currentMillis = millis();  
+  if (pf_ready_currentMillis - pf_ready_previousMillis >= pf_ready_interval) {
+    // save the last time you blinked the LED
+    pf_ready_previousMillis = pf_ready_currentMillis;
+    // if the LED is off turn it on and vice-versa:
+    if (pf_ready_State == LOW) {
+      pf_ready_State = HIGH;
+    } else {
+      pf_ready_State = LOW;
+    }
+    // set the LED with the heatState of the variable:
+    if(PF_READY=true){digitalWrite(D6, pf_ready_State);}
+    else{digitalWrite(D6, LOW);}
+  }
+  }
 
 /*
 1. on PF_START
@@ -107,13 +122,13 @@ bool PF_READY = false;
 */
 void loop() {
   heaters();
+  pf_ready();
   delay(10);
-  if(PF_START()){STARTED=true;}
+  if(PF_START()){STARTED=true;PF_READY=false;}
   if(STARTED){
-  delay(1000); // FOR THE CANDY TO FALL
-   cut();
-   feed();
-    Serial.println('Y');
-    STARTED = false;
-    }
+    delay(1000); // FOR THE CANDY TO FALL
+    cut();
+    feed();
+    STARTED = false; PF_READY=true;
+  }
 }
