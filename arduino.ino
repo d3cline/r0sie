@@ -76,7 +76,7 @@ void cut(){
   digitalWrite(D1, HIGH); // keep it up while its waiting
     }
   digitalWrite(D1, LOW); // when its done shut the motor down
-  }
+}
 
 int FEED_TICK = 9; // How long is the feed going to be?
 void feed(){
@@ -109,7 +109,7 @@ void pf_ready(){
     }
     // set the LED with the heatState of the variable:
     if(PF_READY=true){digitalWrite(D6, pf_ready_State);}
-    else{digitalWrite(D6, LOW);}
+    else{digitalWrite(D6, HIGH);}
   }
   }
 
@@ -126,8 +126,9 @@ void loop() {
   delay(10);
   if(PF_START()){STARTED=true;PF_READY=false;}
   if(STARTED){
-    delay(1000); // FOR THE CANDY TO FALL
+    delay(1500); // FOR THE CANDY TO FALL
     cut();
+    //delay(1000); // for the hell of it
     feed();
     STARTED = false; PF_READY=true;
   }
