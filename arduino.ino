@@ -4,12 +4,15 @@ int pf_ready_State = LOW;        // heatState used to set the LE
 unsigned long previousMillis = 0;     // will store last time LED was updated
 unsigned long pf_ready_previousMillis = 0;       
 
-const long interval = 2000;           // interval at which to blink (milliseconds)
+const long interval = 1000;           // interval at which to blink (milliseconds)
 const long pf_ready_interval = 500;   // interval at which to blink (milliseconds)
 
 bool PF_READY = false;
 bool STARTED = false;
+long OnTime = 750;           // milliseconds of on-time
+long OffTime = 250;          // milliseconds of off-time
 
+ 
 void setup() {
   // set the digital pin as output:
   pinMode(D1, OUTPUT); // Cut Motor
@@ -48,9 +51,34 @@ void heaters(){
   }
 }
 
+void heaters_two()
+{
+  // check to see if it's time to change the state of the LED
+  unsigned long currentMillis = millis();
+ 
+  if((heatState == HIGH) && (currentMillis - previousMillis >= OnTime))
+  {
+    heatState = LOW;
+    previousMillis = currentMillis;  // Remember the time
+    digitalWrite(D5, heatState);
+    digitalWrite(D8, heatState);
+    digitalWrite(D3, heatState);
+
+    
+  }
+  else if ((heatState == LOW) && (currentMillis - previousMillis >= OffTime))
+  {
+    heatState = HIGH;  // turn it on
+    previousMillis = currentMillis;   // Remember the time
+    digitalWrite(D5, heatState);
+    digitalWrite(D8, heatState);
+    digitalWrite(D3, heatState);  }
+}
+
+
 bool CUTTER_COMPLETE(){ // is cutter closed? 
   int cutState = digitalRead(D0);
-  delay(10); // this delay matters so it can do the read
+  //delay(10); // this delay matters so it can do the read
   if(cutState==LOW){ // low is 12 O'clock
     return true;
   } else {
@@ -121,12 +149,12 @@ void pf_ready(){
 5 .Signal PF_READY
 */
 void loop() {
-  heaters();
+  heaters_two();
   pf_ready();
   delay(10);
   if(PF_START()){STARTED=true;PF_READY=false;}
   if(STARTED){
-    delay(1500); // FOR THE CANDY TO FALL
+    delay(1000); // FOR THE CANDY TO FALL
     cut();
     //delay(1000); // for the hell of it
     feed();
